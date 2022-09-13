@@ -2,12 +2,15 @@ from rest_framework import viewsets, status, views
 from rest_framework.response import Response
 from .models import Product, User
 from .serializers import ProductSerializer
+from .producer import publish
 import random
+
 
 class ProductViewSets(viewsets.ViewSet):
     def list(self, request):
         products = Product.objects.all()
         serializer = ProductSerializer(products, many=True)
+        publish()
         return Response(serializer.data)
 
     def create(self, request):
