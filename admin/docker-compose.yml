@@ -4,6 +4,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    command: python manage.py runserver 0.0.0.0:8000
     ports:
       - 8000:8000
     volumes:
@@ -15,19 +16,31 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    command: 'python consumer.py'
+    command: 'python admin.products.consumer.py'
     depends_on:
       - db
 
   db:
-    image: mysql:5.7.22
+    image: postgres:9.6-alpine
     restart: always
     environment:
-      MYSQL_DATABASE: admin
-      MYSQL_USER: root
-      MYSQL_PASSWORD: root
-      MYSQL_ROOT_PASSWORD: root
+#      - HOST:localhost
+      - POSTGRES_DB=admin
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=admin123
+#      MYSQL_ROOT_PASSWORD: root
     volumes:
-      - .dbdata:/var/lib/mysql
+      - ./postgres-data:/var/lib/postgresql/data
     ports:
-      - 33066:3306
+      - 5432:5432
+
+  rabbitmq:
+    image: rabbitmq:3.8-management-alpine
+    ports:
+      - 15673:15672
+    environment:
+      RABBITMQ_DEFAULT_VHOST: vhost
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    depends_on:
+      - backend
