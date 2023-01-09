@@ -9,16 +9,13 @@ services:
       - 8000:8000
     volumes:
       - .:/app
+    restart: on-failure
     depends_on:
-      - db
+      - rabbitmq
+      command: ["./wait-for-it.sh", "rabbitmq:5672", "--", "python", "app.py"]
 
-  queue:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    command: 'python admin.products.consumer.py'
-    depends_on:
-      - db
+#    environment:
+#      AMPQ_DSN: "amqp://guest:guest@localhost:5672"
 
   db:
     image: postgres:9.6-alpine
@@ -32,15 +29,26 @@ services:
     volumes:
       - ./postgres-data:/var/lib/postgresql/data
     ports:
-      - 5432:5432
+      - 5432:5431
 
   rabbitmq:
-    image: rabbitmq:3.8-management-alpine
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    hostname: rabbitmq
     ports:
       - 15673:15672
+      - "5672:5672"
     environment:
-      RABBITMQ_DEFAULT_VHOST: vhost
+#      RABBITMQ_DEFAULT_VHOST: vhost
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
-    depends_on:
-      - backend
+
+#  queue:
+#    build:
+#      context: .
+#      dockerfile: Dockerfile
+#    command: 'python consumer.py'
+#    depends_on:
+#      - db
+#      - rabbitmq
+#      - backend

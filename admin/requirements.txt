@@ -2,7 +2,6 @@ anyio==3.6.1
 asgiref==3.5.1
 async-generator==1.10
 attrs==21.4.0
-blis==0.7.4
 catalogue==2.0.1
 certifi==2020.12.5
 cffi==1.15.1
