@@ -4,30 +4,51 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    command: python manage.py runserver 0.0.0.0:8000
     ports:
       - 8000:8000
     volumes:
       - .:/app
+    restart: on-failure
     depends_on:
-      - db
+      - rabbitmq
+      command: ["./wait-for-it.sh", "rabbitmq:5672", "--", "python", "app.py"]
 
-  queue:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    command: 'python consumer.py'
-    depends_on:
-      - db
+#    environment:
+#      AMPQ_DSN: "amqp://guest:guest@localhost:5672"
 
   db:
-    image: mysql:5.7.22
+    image: postgres:9.6-alpine
     restart: always
     environment:
-      MYSQL_DATABASE: admin
-      MYSQL_USER: root
-      MYSQL_PASSWORD: root
-      MYSQL_ROOT_PASSWORD: root
+#      - HOST:localhost
+      - POSTGRES_DB=admin
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=admin123
+#      MYSQL_ROOT_PASSWORD: root
     volumes:
-      - .dbdata:/var/lib/mysql
+      - ./postgres-data:/var/lib/postgresql/data
     ports:
-      - 33066:3306
+      - 5432:5431
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    hostname: rabbitmq
+    ports:
+      - 15673:15672
+      - "5672:5672"
+    environment:
+#      RABBITMQ_DEFAULT_VHOST: vhost
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+
+#  queue:
+#    build:
+#      context: .
+#      dockerfile: Dockerfile
+#    command: 'python consumer.py'
+#    depends_on:
+#      - db
+#      - rabbitmq
+#      - backend
